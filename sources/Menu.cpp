@@ -487,6 +487,9 @@ void LibrarySystem::deleteBook() {
     std::string bookTitle = book->getTitle();
 
     if (booksRepo.remove(bookId)) {
+        if (auto a = book->getAuthor()) {
+            a->removeBook(bookId);
+        }
         booksRepo.saveToBinaryFile("books.bin");
 
         addToActionHistory("Удалена книга: " + bookTitle);
@@ -713,22 +716,12 @@ void LibrarySystem::handleUserChoice(int choice) {
     }
     else if (role == "Librarian") {
         switch (choice) {
-        case 1:
-            addBook();
-            break;
-        case 2:
-            editBook();
-            break;
-        case 3:
-            deleteBook();
-            break;
-        case 4:
-            std::cout << "Функция выдачи книги\n";
-            break;
-        case 5:
-            std::cout << "Функция приема книги\n";
-            break;
-        case 6:
+        case 1: addBook(); break;
+        case 2: editBook(); break;
+        case 3: deleteBook(); break;
+        case 4: issueBook(); break;   
+        case 5: acceptBook(); break;  
+        case 6: 
             std::cout << "Список читателей:\n";
             for (const auto& pair : usersMap) {
                 if (pair.second->getRole() == "Reader") {
@@ -736,47 +729,23 @@ void LibrarySystem::handleUserChoice(int choice) {
                 }
             }
             break;
-        case 7:
-            ageBasedRecommendations();
-            break;
-        case 8:
-            registerReader();
-            break;
-        case 9:
-            logout();
-            break;
-        default:
-            std::cout << "Неверный выбор!\n";
+        case 7: ageBasedRecommendations(); break;
+        case 8: registerReader(); break;
+        case 9: logout(); break;
+        default: std::cout << "Неверный выбор!\n";
         }
     }
     else if (role == "Director") {
         switch (choice) {
-        case 1:
-            addBook();
-            break;
-        case 2:
-            editBook();
-            break;
-        case 3:
-            deleteBook();
-            break;
-        case 4:
-            generateReport();
-            break;
-        case 5:
-            registerUser();
-            break;
-        case 6:
-            showStatistics();
-            break;
-        case 7:
-            showActionHistory();
-            break;
-        case 8:
-            logout();
-            break;
-        default:
-            std::cout << "Неверный выбор!\n";
+        case 1: addBook(); break;
+        case 2: editBook(); break;
+        case 3: deleteBook(); break;
+        case 4: generateReport(); break;
+        case 5: registerUser(); break;
+        case 6: showStatistics(); break;
+        case 7: showActionHistory(); break;
+        case 8: logout(); break;
+        default: std::cout << "Неверный выбор!\n";
         }
     }
 }
@@ -807,4 +776,149 @@ std::shared_ptr<Person> LibrarySystem::findUserById(const std::string& id) const
 
 std::shared_ptr<Author> LibrarySystem::findAuthorById(const std::string& id) const {
     return authorsRepo.get(id);
+}
+
+void LibrarySystem::issueBook() {
+    std::cout << "=== Выдача книги ===\n";
+    std::string readerId, bookId;
+
+    std::cout << "Введите ID читателя: ";
+    std::cin >> readerId;
+    auto person = findUserById(readerId);
+    auto reader = std::dynamic_pointer_cast<Reader>(person);
+    if (!reader) {
+        std::cout << "Пользователь не найден или не является читателем.\n";
+        return;
+    }
+
+    std::cout << "Введите ID книги: ";
+    std::cin >> bookId;
+    auto book = booksRepo.get(bookId);
+    if (!book) {
+        std::cout << "Книга не найдена.\n";
+        return;
+    }
+    if (book->getQuantity() <= 0) {
+        std::cout << "Нет доступных экземпляров для выдачи.\n";
+        return;
+    }
+
+    book->setQuantity(book->getQuantity() - 1);
+
+    reader->borrowBook(bookId);
+
+    BorrowedBook bb(bookId, readerId, Date()); // текущая дата (по умолчанию 1.1.2000)
+    borrowedBooks.push_back(bb);
+
+    booksRepo.saveToBinaryFile("books.bin");
+    PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
+
+    std::map<std::string, BorrowedBook> borrowedBooksMap;
+    int counter = 0;
+    for (const auto& b : borrowedBooks) {
+        std::string key = b.getBookId() + "_" + b.getReaderId() + "_" + std::to_string(counter++);
+        borrowedBooksMap[key] = b;
+    }
+    BorrowedBook::saveAllToBinaryFile(borrowedBooksMap, "borrowed.bin");
+
+    addToActionHistory("Выдана книга: " + bookId + " читателю " + readerId);
+    std::cout << "Книга выдана.\n";
+}
+
+void LibrarySystem::acceptBook() {
+    std::cout << "=== Прием книги ===\n";
+    std::string readerId, bookId;
+
+    std::cout << "Введите ID читателя: ";
+    std::cin >> readerId;
+    auto person = findUserById(readerId);
+    auto reader = std::dynamic_pointer_cast<Reader>(person);
+    if (!reader) {
+        std::cout << "Пользователь не найден или не является читателем.\n";
+        return;
+    }
+
+    std::cout << "Введите ID книги: ";
+    std::cin >> bookId;
+    auto book = booksRepo.get(bookId);
+    if (!book) {
+        std::cout << "Книга не найдена.\n";
+        return;
+    }
+
+    reader->returnBook(bookId);
+
+    book->setQuantity(book->getQuantity() + 1);
+
+    bool found = false;
+    for (auto& b : borrowedBooks) {
+        if (b.getBookId() == bookId && b.getReaderId() == readerId && !b.isReturned()) {
+            b.returnBook(); 
+            found = true;
+            break;
+        }
+    }
+
+    booksRepo.saveToBinaryFile("books.bin");
+    PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
+
+    std::map<std::string, BorrowedBook> borrowedBooksMap;
+    int counter = 0;
+    for (const auto& b : borrowedBooks) {
+        std::string key = b.getBookId() + "_" + b.getReaderId() + "_" + std::to_string(counter++);
+        borrowedBooksMap[key] = b;
+    }
+    BorrowedBook::saveAllToBinaryFile(borrowedBooksMap, "borrowed.bin");
+
+    addToActionHistory("Принята книга: " + bookId + " от читателя " + readerId);
+    std::cout << (found ? "Книга принята.\n" : "Запись о выдаче не найдена, инвентарь обновлен.\n");
+}
+
+void LibrarySystem::filterBooks() {
+    std::cout << "=== Фильтрация книг ===\n";
+    std::cout << "1. По жанру\n";
+    std::cout << "2. По диапазону годов\n";
+    std::cout << "3. Только доступные (quantity > 0)\n";
+    std::cout << "Выберите вариант: ";
+    int choice;
+    std::cin >> choice;
+
+    std::vector<std::shared_ptr<Book>> filtered;
+    if (choice == 1) {
+        std::cout << "Введите жанр: ";
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::string genre;
+        std::getline(std::cin, genre);
+        filtered = booksRepo.findIf([&](const std::shared_ptr<Book>& b) {
+            return b->getGenre().find(genre) != std::string::npos;
+            });
+    }
+    else if (choice == 2) {
+        int y1, y2;
+        std::cout << "Введите начальный год: ";
+        std::cin >> y1;
+        std::cout << "Введите конечный год: ";
+        std::cin >> y2;
+        if (y1 > y2) std::swap(y1, y2);
+        filtered = booksRepo.findIf([=](const std::shared_ptr<Book>& b) {
+            return b->getYear() >= y1 && b->getYear() <= y2;
+            });
+    }
+    else if (choice == 3) {
+        filtered = booksRepo.findIf([](const std::shared_ptr<Book>& b) {
+            return b->getQuantity() > 0;
+            });
+    }
+    else {
+        std::cout << "Неверный выбор.\n";
+        return;
+    }
+
+    if (filtered.empty()) {
+        std::cout << "По фильтру книги не найдены.\n";
+    }
+    else {
+        std::cout << "Результаты:\n";
+        for (auto& b : filtered) std::cout << *b << "\n";
+    }
 }

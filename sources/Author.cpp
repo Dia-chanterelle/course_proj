@@ -81,48 +81,38 @@ void Author::saveToBinaryFile(std::ofstream& file) const {
 void Author::loadFromBinaryFile(std::ifstream& file) {
     size_t idSize;
     file.read(reinterpret_cast<char*>(&idSize), sizeof(idSize));
-    char* idBuffer = new char[idSize + 1];
-    file.read(idBuffer, idSize);
-    idBuffer[idSize] = '\0';
-    id = idBuffer;
-    delete[] idBuffer;
+    std::string idStr(idSize, '\0');
+    file.read(&idStr[0], idSize);
+    id = std::move(idStr);
 
     size_t nameSize;
     file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
-    char* nameBuffer = new char[nameSize + 1];
-    file.read(nameBuffer, nameSize);
-    nameBuffer[nameSize] = '\0';
-    std::string fullName = nameBuffer;
-    delete[] nameBuffer;
+    std::string fullName(nameSize, '\0');
+    file.read(&fullName[0], nameSize);
 
     size_t space1 = fullName.find(' ');
     size_t space2 = fullName.find(' ', space1 + 1);
     if (space1 != std::string::npos && space2 != std::string::npos) {
-        std::string lastName = fullName.substr(0, space1);
-        std::string firstName = fullName.substr(space1 + 1, space2 - space1 - 1);
-        std::string patronymic = fullName.substr(space2 + 1);
-        fio = FIO(lastName, firstName, patronymic);
+        fio = FIO(fullName.substr(0, space1),
+            fullName.substr(space1 + 1, space2 - space1 - 1),
+            fullName.substr(space2 + 1));
     }
 
     size_t bioSize;
     file.read(reinterpret_cast<char*>(&bioSize), sizeof(bioSize));
-    char* bioBuffer = new char[bioSize + 1];
-    file.read(bioBuffer, bioSize);
-    bioBuffer[bioSize] = '\0';
-    biography = bioBuffer;
-    delete[] bioBuffer;
+    std::string bioStr(bioSize, '\0');
+    file.read(&bioStr[0], bioSize);
+    biography = std::move(bioStr);
 
     size_t bookCount;
     file.read(reinterpret_cast<char*>(&bookCount), sizeof(bookCount));
-
     bookIds.clear();
     for (size_t i = 0; i < bookCount; ++i) {
         size_t bookIdSize;
         file.read(reinterpret_cast<char*>(&bookIdSize), sizeof(bookIdSize));
-        char* bookIdBuffer = new char[bookIdSize + 1];
-        file.read(bookIdBuffer, bookIdSize);
-        bookIdBuffer[bookIdSize] = '\0';
-        bookIds.push_back(bookIdBuffer);
-        delete[] bookIdBuffer;
+        std::string b(bookIdSize, '\0');
+        file.read(&b[0], bookIdSize);
+        bookIds.push_back(std::move(b));
     }
 }
+

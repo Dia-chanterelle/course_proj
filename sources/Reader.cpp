@@ -11,14 +11,14 @@ Reader::Reader(const FIO& f, const std::string& log, const std::string& pwd,
 
 void Reader::showMenu() {
     std::cout << "=== Меню читателя ===\n";
-    std::cout << "ID: " << id << ", Пользователь: " << fio.getFullName()
+    std::cout << "ID: " << id << ", Читатель: " << fio.getFullName()
         << ", возраст: " << age << "\n";
-    std::cout << "1. Просмотреть книги\n";
-    std::cout << "2. Поиск книг\n";
-    std::cout << "3. Мои книги\n";
-    std::cout << "4. Изменить профиль\n";
-    std::cout << "5. Выход\n";
+    std::cout << "1. Просмотреть все книги\n";
+    std::cout << "2. Поиск и фильтрация книг\n";
+    std::cout << "3. Мои книги (с датами выдачи и возврата)\n";
+    std::cout << "4. Выход\n";
 }
+
 
 void Reader::borrowBook(const std::string& bookId) {
     borrowedBooks.emplace_back(bookId, id, Date());
@@ -64,15 +64,13 @@ void Reader::loadFromBinaryFile(std::ifstream& file) {
     for (size_t i = 0; i < borrowedCount; ++i) {
         size_t bookIdSize;
         file.read(reinterpret_cast<char*>(&bookIdSize), sizeof(bookIdSize));
-        char* bookIdBuffer = new char[bookIdSize + 1];
-        file.read(bookIdBuffer, bookIdSize);
-        bookIdBuffer[bookIdSize] = '\0';
-        std::string bookId = bookIdBuffer;
-        delete[] bookIdBuffer;
+        std::string bookId(bookIdSize, '\0');
+        file.read(bookId.data(), bookIdSize);
 
-        borrowedBooks.emplace_back(bookId, id, Date());
+        borrowedBooks.emplace_back(bookId, id, Date(1, 1, 2000));
     }
 }
+
 
 void Reader::saveAllToBinaryFile(const std::map<std::string, std::shared_ptr<Reader>>& readersMap,
     const std::string& filename) {

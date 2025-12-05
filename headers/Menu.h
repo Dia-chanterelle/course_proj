@@ -57,6 +57,9 @@ public:
     void showAllBooks() const;
     void searchBooks();
     void sortBooks();
+    void issueBook();   
+    void acceptBook();  
+    void filterBooks();
 
     void loadAllData();
     void saveAllData();

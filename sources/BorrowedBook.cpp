@@ -3,7 +3,7 @@
 #include <cstring>
 
 BorrowedBook::BorrowedBook(const std::string& bId, const std::string& rId, const Date& bd)
-    : bookId(bId), readerId(rId), borrowDate(bd), returned(false) {
+    : bookId(bId), readerId(rId), borrowDate(bd), returnDate(Date()), returned(false) {
 }
 
 void BorrowedBook::saveToBinaryFile(std::ofstream& file) const {
@@ -15,12 +15,15 @@ void BorrowedBook::saveToBinaryFile(std::ofstream& file) const {
     file.write(reinterpret_cast<const char*>(&readerIdSize), sizeof(readerIdSize));
     file.write(readerId.c_str(), readerIdSize);
 
-    int day = borrowDate.getDay();
-    int month = borrowDate.getMonth();
-    int year = borrowDate.getYear();
-    file.write(reinterpret_cast<const char*>(&day), sizeof(day));
-    file.write(reinterpret_cast<const char*>(&month), sizeof(month));
-    file.write(reinterpret_cast<const char*>(&year), sizeof(year));
+    int d = borrowDate.getDay(), m = borrowDate.getMonth(), y = borrowDate.getYear();
+    file.write(reinterpret_cast<const char*>(&d), sizeof(d));
+    file.write(reinterpret_cast<const char*>(&m), sizeof(m));
+    file.write(reinterpret_cast<const char*>(&y), sizeof(y));
+
+    int rd = returnDate.getDay(), rm = returnDate.getMonth(), ry = returnDate.getYear();
+    file.write(reinterpret_cast<const char*>(&rd), sizeof(rd));
+    file.write(reinterpret_cast<const char*>(&rm), sizeof(rm));
+    file.write(reinterpret_cast<const char*>(&ry), sizeof(ry));
 
     file.write(reinterpret_cast<const char*>(&returned), sizeof(returned));
 }
@@ -28,31 +31,35 @@ void BorrowedBook::saveToBinaryFile(std::ofstream& file) const {
 void BorrowedBook::loadFromBinaryFile(std::ifstream& file) {
     size_t bookIdSize;
     file.read(reinterpret_cast<char*>(&bookIdSize), sizeof(bookIdSize));
-    char* bookIdBuffer = new char[bookIdSize + 1];
-    file.read(bookIdBuffer, bookIdSize);
-    bookIdBuffer[bookIdSize] = '\0';
-    bookId = bookIdBuffer;
-    delete[] bookIdBuffer;
+    std::string bId(bookIdSize, '\0');
+    file.read(bId.data(), bookIdSize);
+    bookId = std::move(bId);
 
     size_t readerIdSize;
     file.read(reinterpret_cast<char*>(&readerIdSize), sizeof(readerIdSize));
-    char* readerIdBuffer = new char[readerIdSize + 1];
-    file.read(readerIdBuffer, readerIdSize);
-    readerIdBuffer[readerIdSize] = '\0';
-    readerId = readerIdBuffer;
-    delete[] readerIdBuffer;
+    std::string rId(readerIdSize, '\0');
+    file.read(rId.data(), readerIdSize);
+    readerId = std::move(rId);
 
-    int day, month, year;
-    file.read(reinterpret_cast<char*>(&day), sizeof(day));
-    file.read(reinterpret_cast<char*>(&month), sizeof(month));
-    file.read(reinterpret_cast<char*>(&year), sizeof(year));
-    borrowDate = Date(day, month, year);
+    int d, m, y;
+    file.read(reinterpret_cast<char*>(&d), sizeof(d));
+    file.read(reinterpret_cast<char*>(&m), sizeof(m));
+    file.read(reinterpret_cast<char*>(&y), sizeof(y));
+    borrowDate = Date(d, m, y);
+
+    int rd, rm, ry;
+    file.read(reinterpret_cast<char*>(&rd), sizeof(rd));
+    file.read(reinterpret_cast<char*>(&rm), sizeof(rm));
+    file.read(reinterpret_cast<char*>(&ry), sizeof(ry));
+    returnDate = Date(rd, rm, ry);
 
     file.read(reinterpret_cast<char*>(&returned), sizeof(returned));
 }
 
-void BorrowedBook::saveAllToBinaryFile(const std::map<std::string, BorrowedBook>& borrowedBooksMap,
-    const std::string& filename) {
+void BorrowedBook::saveAllToBinaryFile(
+    const std::map<std::string, BorrowedBook>& borrowedBooksMap,
+    const std::string& filename)
+{
     std::ofstream file(filename, std::ios::binary);
     if (file.is_open()) {
         size_t count = borrowedBooksMap.size();
@@ -61,7 +68,6 @@ void BorrowedBook::saveAllToBinaryFile(const std::map<std::string, BorrowedBook>
         for (const auto& pair : borrowedBooksMap) {
             pair.second.saveToBinaryFile(file);
         }
-        file.close();
     }
 }
 

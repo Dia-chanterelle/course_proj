@@ -22,13 +22,14 @@ public:
     Date getReturnDate() const { return returnDate; }
     bool isReturned() const { return returned; }
 
-    void returnBook() { returned = true; }
+    void returnBook() { returned = true; returnDate = Date(1, 1, 2000); }
 
     void saveToBinaryFile(std::ofstream& file) const;
     void loadFromBinaryFile(std::ifstream& file);
 
     // Статические методы для работы с map (ключ - bookId + readerId)
-    static void saveAllToBinaryFile(const std::map<std::string, BorrowedBook>& borrowedBooksMap,
+    static void saveAllToBinaryFile(
+        const std::map<std::string, BorrowedBook>& borrowedBooksMap,
         const std::string& filename);
     static std::map<std::string, BorrowedBook> loadAllFromBinaryFile(const std::string& filename);
 };

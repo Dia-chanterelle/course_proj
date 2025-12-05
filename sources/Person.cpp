@@ -101,53 +101,41 @@ void Person::saveToBinaryFile(std::ofstream& file) const {
 void Person::loadFromBinaryFile(std::ifstream& file) {
     size_t idSize;
     file.read(reinterpret_cast<char*>(&idSize), sizeof(idSize));
-    char* idBuffer = new char[idSize + 1];
-    file.read(idBuffer, idSize);
-    idBuffer[idSize] = '\0';
-    id = idBuffer;
-    delete[] idBuffer;
+    std::string idStr(idSize, '\0');
+    file.read(idStr.data(), idSize);
+    id = std::move(idStr);
 
     size_t loginSize;
     file.read(reinterpret_cast<char*>(&loginSize), sizeof(loginSize));
-    char* loginBuffer = new char[loginSize + 1];
-    file.read(loginBuffer, loginSize);
-    loginBuffer[loginSize] = '\0';
-    login = loginBuffer;
-    delete[] loginBuffer;
+    std::string loginStr(loginSize, '\0');
+    file.read(loginStr.data(), loginSize);
+    login = std::move(loginStr);
 
     size_t pwdSize;
     file.read(reinterpret_cast<char*>(&pwdSize), sizeof(pwdSize));
-    char* pwdBuffer = new char[pwdSize + 1];
-    file.read(pwdBuffer, pwdSize);
-    pwdBuffer[pwdSize] = '\0';
-    encryptedPassword = pwdBuffer;
-    delete[] pwdBuffer;
+    std::string pwdStr(pwdSize, '\0');
+    file.read(pwdStr.data(), pwdSize);
+    encryptedPassword = std::move(pwdStr);
 
     file.read(reinterpret_cast<char*>(&age), sizeof(age));
 
     size_t nameSize;
     file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
-    char* nameBuffer = new char[nameSize + 1];
-    file.read(nameBuffer, nameSize);
-    nameBuffer[nameSize] = '\0';
-    std::string fullName = nameBuffer;
-    delete[] nameBuffer;
+    std::string fullName(nameSize, '\0');
+    file.read(fullName.data(), nameSize);
 
     size_t space1 = fullName.find(' ');
     size_t space2 = fullName.find(' ', space1 + 1);
     if (space1 != std::string::npos && space2 != std::string::npos) {
-        std::string lastName = fullName.substr(0, space1);
-        std::string firstName = fullName.substr(space1 + 1, space2 - space1 - 1);
-        std::string patronymic = fullName.substr(space2 + 1);
-        fio = FIO(lastName, firstName, patronymic);
+        fio = FIO(fullName.substr(0, space1),
+            fullName.substr(space1 + 1, space2 - space1 - 1),
+            fullName.substr(space2 + 1));
     }
 
     size_t roleSize;
     file.read(reinterpret_cast<char*>(&roleSize), sizeof(roleSize));
-    char* roleBuffer = new char[roleSize + 1];
-    file.read(roleBuffer, roleSize);
-    roleBuffer[roleSize] = '\0';
-    delete[] roleBuffer;
+    std::string role(roleSize, '\0');
+    file.read(role.data(), roleSize);
 }
 
 std::string Person::generateId() const {

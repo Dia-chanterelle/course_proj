@@ -107,7 +107,6 @@ std::map<std::string, std::shared_ptr<Reader>> Reader::loadAllFromBinaryFile(con
     return readersMap;
 }
 
-// ИСПРАВЛЕНО: определение generateId в cpp файле
 std::string Reader::generateId() const {
     return "R" + std::to_string(person_count + 1);
 }

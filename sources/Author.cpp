@@ -54,29 +54,23 @@ bool Author::hasBook(const std::string& bookId) const {
     return std::find(bookIds.begin(), bookIds.end(), bookId) != bookIds.end();
 }
 
-// Бинарные методы для работы с Repository
 void Author::saveToBinaryFile(std::ofstream& file) const {
-    // Сохраняем id
     size_t idSize = id.size();
     file.write(reinterpret_cast<const char*>(&idSize), sizeof(idSize));
     file.write(id.c_str(), idSize);
 
-    // Сохраняем ФИО
     std::string fullName = fio.getFullName();
     size_t nameSize = fullName.size();
     file.write(reinterpret_cast<const char*>(&nameSize), sizeof(nameSize));
     file.write(fullName.c_str(), nameSize);
 
-    // Сохраняем биографию
     size_t bioSize = biography.size();
     file.write(reinterpret_cast<const char*>(&bioSize), sizeof(bioSize));
     file.write(biography.c_str(), bioSize);
 
-    // Сохраняем количество книг
     size_t bookCount = bookIds.size();
     file.write(reinterpret_cast<const char*>(&bookCount), sizeof(bookCount));
 
-    // Сохраняем ID книг
     for (const auto& bookId : bookIds) {
         size_t bookIdSize = bookId.size();
         file.write(reinterpret_cast<const char*>(&bookIdSize), sizeof(bookIdSize));
@@ -85,7 +79,6 @@ void Author::saveToBinaryFile(std::ofstream& file) const {
 }
 
 void Author::loadFromBinaryFile(std::ifstream& file) {
-    // Загружаем id
     size_t idSize;
     file.read(reinterpret_cast<char*>(&idSize), sizeof(idSize));
     char* idBuffer = new char[idSize + 1];
@@ -94,7 +87,6 @@ void Author::loadFromBinaryFile(std::ifstream& file) {
     id = idBuffer;
     delete[] idBuffer;
 
-    // Загружаем ФИО
     size_t nameSize;
     file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
     char* nameBuffer = new char[nameSize + 1];
@@ -103,7 +95,6 @@ void Author::loadFromBinaryFile(std::ifstream& file) {
     std::string fullName = nameBuffer;
     delete[] nameBuffer;
 
-    // Парсим ФИО на компоненты
     size_t space1 = fullName.find(' ');
     size_t space2 = fullName.find(' ', space1 + 1);
     if (space1 != std::string::npos && space2 != std::string::npos) {
@@ -113,7 +104,6 @@ void Author::loadFromBinaryFile(std::ifstream& file) {
         fio = FIO(lastName, firstName, patronymic);
     }
 
-    // Загружаем биографию
     size_t bioSize;
     file.read(reinterpret_cast<char*>(&bioSize), sizeof(bioSize));
     char* bioBuffer = new char[bioSize + 1];
@@ -122,11 +112,9 @@ void Author::loadFromBinaryFile(std::ifstream& file) {
     biography = bioBuffer;
     delete[] bioBuffer;
 
-    // Загружаем количество книг
     size_t bookCount;
     file.read(reinterpret_cast<char*>(&bookCount), sizeof(bookCount));
 
-    // Загружаем ID книг
     bookIds.clear();
     for (size_t i = 0; i < bookCount; ++i) {
         size_t bookIdSize;

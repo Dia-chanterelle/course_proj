@@ -42,6 +42,5 @@ public:
     virtual void saveToBinaryFile(std::ofstream& file) const;
     virtual void loadFromBinaryFile(std::ifstream& file);
 
-    // ИСПРАВЛЕНО: убираем определение в заголовке, только объявление
     virtual std::string generateId() const;
 };

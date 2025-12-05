@@ -17,28 +17,22 @@ LibrarySystem::~LibrarySystem() {
 void LibrarySystem::loadAllData() {
     std::cout << "Загрузка данных...\n";
 
-    // Загрузка авторов через Repository
     if (!authorsRepo.loadFromBinaryFile("authors.bin")) {
         std::cout << "Файл authors.bin не найден или поврежден. Создание тестовых авторов...\n";
-        // Тестовые авторы будут созданы в createTestBooks()
     }
 
-    // Загрузка книг через Repository (передаем authorsRepo как дополнительный аргумент)
     if (!booksRepo.loadFromBinaryFile("books.bin", authorsRepo.getAllAsMap())) {
         std::cout << "Файл books.bin не найден или поврежден. Создание тестовых книг...\n";
         createTestBooks();
     }
 
-    // Загрузка пользователей через фабрику
     usersMap = PersonFactory::loadAllFromBinaryFile("users.bin");
 
-    // Если пользователей нет, создаем тестовых
     if (usersMap.empty()) {
         std::cout << "Создание тестовых пользователей...\n";
         createTestUsers();
     }
 
-    // Загрузка взятых книг
     auto borrowedBooksMap = BorrowedBook::loadAllFromBinaryFile("borrowed.bin");
     borrowedBooks.clear();
     for (const auto& pair : borrowedBooksMap) {
@@ -55,7 +49,6 @@ void LibrarySystem::loadAllData() {
 void LibrarySystem::saveAllData() {
     std::cout << "Сохранение данных...\n";
 
-    // Сохранение через Repository
     if (!authorsRepo.saveToBinaryFile("authors.bin")) {
         std::cout << "Ошибка сохранения авторов!\n";
     }
@@ -64,10 +57,8 @@ void LibrarySystem::saveAllData() {
         std::cout << "Ошибка сохранения книг!\n";
     }
 
-    // Сохранение пользователей через фабрику
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
-    // Сохранение взятых книг
     std::map<std::string, BorrowedBook> borrowedBooksMap;
     int counter = 0;
     for (const auto& book : borrowedBooks) {
@@ -102,7 +93,6 @@ void LibrarySystem::createTestUsers() {
 }
 
 void LibrarySystem::createTestBooks() {
-    // Создаем тестовых авторов если их нет
     if (authorsRepo.empty()) {
         auto author1 = std::make_shared<Author>(FIO("Толстой", "Лев", "Николаевич"), "Русский писатель");
         auto author2 = std::make_shared<Author>(FIO("Достоевский", "Федор", "Михайлович"), "Русский писатель");
@@ -111,7 +101,6 @@ void LibrarySystem::createTestBooks() {
         authorsRepo.add(author2);
     }
 
-    // Создаем тестовые книги
     auto allAuthors = authorsRepo.getAll();
     if (!allAuthors.empty()) {
         auto author1 = allAuthors[0];
@@ -170,7 +159,6 @@ bool LibrarySystem::login() {
     std::cout << "Введите пароль: ";
     std::cin >> password;
 
-    // Ищем пользователя по логину
     for (const auto& pair : usersMap) {
         if (pair.second->getLogin() == login && pair.second->authenticate(password)) {
             currentUser = pair.second;
@@ -201,7 +189,6 @@ void LibrarySystem::registerReader() {
     std::cout << "Введите возраст: ";
     std::cin >> age;
 
-    // Проверяем уникальность логина
     for (const auto& pair : usersMap) {
         if (pair.second->getLogin() == login) {
             std::cout << " Ошибка: пользователь с таким логином уже существует!\n";
@@ -212,7 +199,6 @@ void LibrarySystem::registerReader() {
     auto newReader = std::make_shared<Reader>(fio, login, password, age);
     usersMap[newReader->getId()] = newReader;
 
-    // Сохраняем изменения
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
     std::cout << " Читатель успешно зарегистрирован!\n";
@@ -237,7 +223,6 @@ void LibrarySystem::registerLibrarian() {
     std::cout << "Введите отдел: ";
     std::cin >> department;
 
-    // Проверяем уникальность логина
     for (const auto& pair : usersMap) {
         if (pair.second->getLogin() == login) {
             std::cout << " Ошибка: пользователь с таким логином уже существует!\n";
@@ -248,7 +233,6 @@ void LibrarySystem::registerLibrarian() {
     auto newLibrarian = std::make_shared<Librarian>(fio, login, password, age, "", department);
     usersMap[newLibrarian->getId()] = newLibrarian;
 
-    // Сохраняем изменения
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
     std::cout << "Библиотекарь успешно зарегистрирован!\n";
@@ -271,7 +255,6 @@ void LibrarySystem::registerDirector() {
     std::cout << "Введите возраст: ";
     std::cin >> age;
 
-    // Проверяем уникальность логина
     for (const auto& pair : usersMap) {
         if (pair.second->getLogin() == login) {
             std::cout << " Ошибка: пользователь с таким логином уже существует!\n";
@@ -282,7 +265,6 @@ void LibrarySystem::registerDirector() {
     auto newDirector = std::make_shared<Director>(fio, login, password, age);
     usersMap[newDirector->getId()] = newDirector;
 
-    // Сохраняем изменения
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
     std::cout << " Директор успешно зарегистрирован!\n";
@@ -325,14 +307,12 @@ void LibrarySystem::registerUser() {
 
 void LibrarySystem::addToActionHistory(const std::string& action) {
     actionHistory.push(action);
-    // Ограничиваем размер истории
     if (actionHistory.size() > 100) {
         std::stack<std::string> temp;
         while (!actionHistory.empty()) {
             temp.push(actionHistory.top());
             actionHistory.pop();
         }
-        // Оставляем только последние 50 записей
         int count = 0;
         while (!temp.empty() && count < 50) {
             actionHistory.push(temp.top());
@@ -356,7 +336,6 @@ void LibrarySystem::showActionHistory() {
         temp.pop();
     }
 
-    // Выводим в обратном порядке (от старых к новым)
     for (int i = historyList.size() - 1; i >= 0; --i) {
         std::cout << "- " << historyList[i] << "\n";
     }
@@ -425,13 +404,10 @@ void LibrarySystem::addBook() {
     std::cin.ignore();
     std::getline(std::cin, genre);
 
-    // Создание новой книги
     auto newBook = std::make_shared<Book>(title, nullptr, isbn, year, quantity, genre);
 
-    // Добавляем в Repository
     booksRepo.add(newBook);
 
-    // Автоматическое сохранение
     booksRepo.saveToBinaryFile("books.bin");
 
     addToActionHistory("Добавлена книга: " + title);
@@ -444,7 +420,6 @@ void LibrarySystem::editBook() {
     std::cout << "Введите ID книги для редактирования: ";
     std::cin >> bookId;
 
-    // Получаем книгу из Repository
     auto book = booksRepo.get(bookId);
     if (!book) {
         std::cout << "Книга с ID " << bookId << " не найдена.\n";
@@ -491,7 +466,6 @@ void LibrarySystem::editBook() {
         book->setGenre(genre);
     }
 
-    // Автоматическое сохранение
     booksRepo.saveToBinaryFile("books.bin");
 
     addToActionHistory("Отредактирована книга: " + book->getTitle());
@@ -504,7 +478,6 @@ void LibrarySystem::deleteBook() {
     std::cout << "Введите ID книги для удаления: ";
     std::cin >> bookId;
 
-    // Получаем книгу перед удалением
     auto book = booksRepo.get(bookId);
     if (!book) {
         std::cout << "Книга с ID " << bookId << " не найдена.\n";
@@ -513,9 +486,7 @@ void LibrarySystem::deleteBook() {
 
     std::string bookTitle = book->getTitle();
 
-    // Удаляем из Repository
     if (booksRepo.remove(bookId)) {
-        // Автоматическое сохранение
         booksRepo.saveToBinaryFile("books.bin");
 
         addToActionHistory("Удалена книга: " + bookTitle);
@@ -547,7 +518,6 @@ void LibrarySystem::searchBooks() {
     std::cout << "Результаты поиска:\n";
     bool found = false;
 
-    // Используем шаблонный метод findIf Repository
     auto results = booksRepo.findIf([&query](const std::shared_ptr<Book>& book) {
         return book->getTitle().find(query) != std::string::npos ||
             (book->getAuthor() && book->getAuthor()->getFIO().getFullName().find(query) != std::string::npos) ||
@@ -575,7 +545,6 @@ void LibrarySystem::sortBooks() {
     int choice;
     std::cin >> choice;
 
-    // Получаем все книги
     auto books = booksRepo.getAll();
 
     switch (choice) {
@@ -610,7 +579,6 @@ void LibrarySystem::sortBooks() {
         return;
     }
 
-    // Выводим отсортированный список
     std::cout << "=== Отсортированные книги ===\n";
     for (const auto& book : books) {
         std::cout << *book << std::endl;
@@ -659,7 +627,6 @@ void LibrarySystem::ageBasedRecommendations() {
         std::cout << "- Подростковые романы\n";
         std::cout << "- Образовательные книги\n";
 
-        // Используем findIf из Repository
         auto childrenBooks = booksRepo.findIf([](const std::shared_ptr<Book>& book) {
             return book->getGenre().find("Детская") != std::string::npos ||
                 book->getGenre().find("Для детей") != std::string::npos;
@@ -701,7 +668,6 @@ void LibrarySystem::showStatistics() const {
     std::cout << "Библиотекарей: " << librarians << "\n";
     std::cout << "Директоров: " << directors << "\n";
 
-    // Статистика по жанрам с использованием Repository
     std::map<std::string, int> genreStats;
     int totalBooks = 0;
 

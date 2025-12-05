@@ -36,41 +36,33 @@ bool Book::operator==(const Book& other) const {
     return id == other.id;
 }
 
-// Бинарные методы для работы с Repository
 void Book::saveToBinaryFile(std::ofstream& file) const {
-    // Сохраняем id
     size_t idSize = id.size();
     file.write(reinterpret_cast<const char*>(&idSize), sizeof(idSize));
     file.write(id.c_str(), idSize);
 
-    // Сохраняем title
     size_t titleSize = title.size();
     file.write(reinterpret_cast<const char*>(&titleSize), sizeof(titleSize));
     file.write(title.c_str(), titleSize);
 
-    // Сохраняем author id
     std::string authorId = author ? author->getId() : "NULL";
     size_t authorIdSize = authorId.size();
     file.write(reinterpret_cast<const char*>(&authorIdSize), sizeof(authorIdSize));
     file.write(authorId.c_str(), authorIdSize);
 
-    // Сохраняем isbn
     size_t isbnSize = isbn.size();
     file.write(reinterpret_cast<const char*>(&isbnSize), sizeof(isbnSize));
     file.write(isbn.c_str(), isbnSize);
 
-    // Сохраняем числовые поля
     file.write(reinterpret_cast<const char*>(&year), sizeof(year));
     file.write(reinterpret_cast<const char*>(&quantity), sizeof(quantity));
 
-    // Сохраняем genre
     size_t genreSize = genre.size();
     file.write(reinterpret_cast<const char*>(&genreSize), sizeof(genreSize));
     file.write(genre.c_str(), genreSize);
 }
 
 void Book::loadFromBinaryFile(std::ifstream& file, const std::map<std::string, std::shared_ptr<Author>>& authorsMap) {
-    // Загружаем id
     size_t idSize;
     file.read(reinterpret_cast<char*>(&idSize), sizeof(idSize));
     char* idBuffer = new char[idSize + 1];
@@ -79,7 +71,6 @@ void Book::loadFromBinaryFile(std::ifstream& file, const std::map<std::string, s
     id = idBuffer;
     delete[] idBuffer;
 
-    // Загружаем title
     size_t titleSize;
     file.read(reinterpret_cast<char*>(&titleSize), sizeof(titleSize));
     char* titleBuffer = new char[titleSize + 1];
@@ -88,7 +79,6 @@ void Book::loadFromBinaryFile(std::ifstream& file, const std::map<std::string, s
     title = titleBuffer;
     delete[] titleBuffer;
 
-    // Загружаем author id
     size_t authorIdSize;
     file.read(reinterpret_cast<char*>(&authorIdSize), sizeof(authorIdSize));
     char* authorIdBuffer = new char[authorIdSize + 1];
@@ -97,7 +87,6 @@ void Book::loadFromBinaryFile(std::ifstream& file, const std::map<std::string, s
     std::string authorId = authorIdBuffer;
     delete[] authorIdBuffer;
 
-    // Находим автора в map
     author = nullptr;
     if (authorId != "NULL") {
         auto it = authorsMap.find(authorId);
@@ -106,7 +95,6 @@ void Book::loadFromBinaryFile(std::ifstream& file, const std::map<std::string, s
         }
     }
 
-    // Загружаем isbn
     size_t isbnSize;
     file.read(reinterpret_cast<char*>(&isbnSize), sizeof(isbnSize));
     char* isbnBuffer = new char[isbnSize + 1];
@@ -115,11 +103,9 @@ void Book::loadFromBinaryFile(std::ifstream& file, const std::map<std::string, s
     isbn = isbnBuffer;
     delete[] isbnBuffer;
 
-    // Загружаем числовые поля
     file.read(reinterpret_cast<char*>(&year), sizeof(year));
     file.read(reinterpret_cast<char*>(&quantity), sizeof(quantity));
 
-    // Загружаем genre
     size_t genreSize;
     file.read(reinterpret_cast<char*>(&genreSize), sizeof(genreSize));
     char* genreBuffer = new char[genreSize + 1];

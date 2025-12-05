@@ -76,7 +76,6 @@ std::map<std::string, std::shared_ptr<Librarian>> Librarian::loadAllFromBinaryFi
     return librariansMap;
 }
 
-// ИСПРАВЛЕНО: определение generateId в cpp файле
 std::string Librarian::generateId() const {
     return "L" + std::to_string(person_count + 1);
 }

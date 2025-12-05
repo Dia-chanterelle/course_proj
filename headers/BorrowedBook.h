@@ -24,7 +24,6 @@ public:
 
     void returnBook() { returned = true; }
 
-    // Бинарные методы
     void saveToBinaryFile(std::ofstream& file) const;
     void loadFromBinaryFile(std::ifstream& file);
 

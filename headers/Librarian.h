@@ -23,6 +23,5 @@ public:
     static std::map<std::string, std::shared_ptr<Librarian>> loadAllFromBinaryFile(const std::string& filename);
 
 protected:
-    // ИСПРАВЛЕНО: только объявление
     std::string generateId() const override;
 };

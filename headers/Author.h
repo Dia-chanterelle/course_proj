@@ -21,7 +21,6 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Author& author);
     bool operator==(const Author& other) const;
 
-    // Геттеры
     FIO getFIO() const { return fio; }
     std::string getId() const { return id; }
     std::string getBiography() const { return biography; }
@@ -32,7 +31,7 @@ public:
     void removeBook(const std::string& bookId);
     bool hasBook(const std::string& bookId) const;
 
-    // Статические методы
+
     static int getAuthorCount() { return author_count; }
     static void setAuthorCount(int count) { author_count = count; }
 

@@ -55,7 +55,6 @@ std::map<std::string, std::shared_ptr<Director>> Director::loadAllFromBinaryFile
     return directorsMap;
 }
 
-// ИСПРАВЛЕНО: определение generateId в cpp файле
 std::string Director::generateId() const {
     return "D" + std::to_string(person_count + 1);
 }

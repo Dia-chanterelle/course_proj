@@ -57,9 +57,16 @@ public:
     void showAllBooks() const;
     void searchBooks();
     void sortBooks();
+    void showBooksByAuthor();
+
+    void showAllAuthors() const;
+    void searchAuthors();
+
     void issueBook();   
     void acceptBook();  
     void filterBooks();
+    void showReaderBorrowedBooks(const std::string&);
+    void deleteUser(const std::string& userId);
 
     void loadAllData();
     void saveAllData();

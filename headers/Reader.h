@@ -15,6 +15,8 @@ public:
 
     void showMenu() override;
     std::string getRole() const override { return "Reader"; }
+    const std::vector<BorrowedBook>& getBorrowedBooks() const { return borrowedBooks; }
+
 
     void borrowBook(const std::string& bookId);
     void returnBook(const std::string& bookId);

@@ -11,13 +11,17 @@ Reader::Reader(const FIO& f, const std::string& log, const std::string& pwd,
 
 void Reader::showMenu() {
     std::cout << "=== Меню читателя ===\n";
-    std::cout << "ID: " << id << ", Читатель: " << fio.getFullName()
-        << ", возраст: " << age << "\n";
-    std::cout << "1. Просмотреть все книги\n";
-    std::cout << "2. Поиск и фильтрация книг\n";
-    std::cout << "3. Мои книги (с датами выдачи и возврата)\n";
-    std::cout << "4. Выход\n";
+    std::cout << "1. Просмотр книг\n";
+    std::cout << "   |-- Все книги\n";
+    std::cout << "   |-- Поиск книг\n";
+    std::cout << "   |-- Фильтрация книг\n";
+    std::cout << "   |-- Просмотр авторов\n";
+    std::cout << "   |-- Поиск авторов\n";
+    std::cout << "   |-- Просмотр книг по автору\n";
+    std::cout << "2. Мои книги (с датами выдачи и возврата)\n";
+    std::cout << "3. Выход\n";
 }
+
 
 
 void Reader::borrowBook(const std::string& bookId) {
@@ -33,12 +37,20 @@ void Reader::returnBook(const std::string& bookId) {
 }
 
 void Reader::showBorrowedBooks() const {
-    std::cout << "Книги, взятые читателем " << fio.getFullName()
-        << " (ID: " << id << ", возраст: " << age << "):\n";
-    for (const auto& book : borrowedBooks) {
-        std::cout << "ID книги: " << book.getBookId() << std::endl;
+    if (borrowedBooks.empty()) {
+        std::cout << "У вас нет взятых книг.\n";
+        return;
+    }
+    std::cout << "Ваши книги:\n";
+    for (const auto& b : borrowedBooks) {
+        std::cout << " - " << b.getBookId()
+            << " | Дата выдачи: " << b.getBorrowDate()
+            << " | Дата возврата: " << b.getReturnDate()
+            << (b.isReturned() ? " (возвращена)" : " (на руках)")
+            << "\n";
     }
 }
+
 
 void Reader::saveToBinaryFile(std::ofstream& file) const {
     Person::saveToBinaryFile(file);

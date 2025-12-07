@@ -416,61 +416,82 @@ void LibrarySystem::addBook() {
 
 void LibrarySystem::editBook() {
     std::string bookId;
-    std::cout << "=== Редактирование книги ===\n";
     std::cout << "Введите ID книги для редактирования: ";
     std::cin >> bookId;
 
     auto book = booksRepo.get(bookId);
     if (!book) {
-        std::cout << "Книга с ID " << bookId << " не найдена.\n";
+        std::cout << "Книга не найдена.\n";
         return;
     }
 
-    std::string title, isbn, genre;
-    int year, quantity;
+    std::cout << "Редактирование книги [" << book->getId() << "] "
+        << book->getTitle() << "\n";
+    std::cout << "1. Изменить название\n";
+    std::cout << "2. Изменить автора\n";
+    std::cout << "3. Изменить ISBN\n";
+    std::cout << "4. Изменить год\n";
+    std::cout << "5. Изменить количество\n";
+    std::cout << "6. Изменить жанр\n";
+    int choice; std::cin >> choice;
 
-    std::cout << "Текущее название: " << book->getTitle() << "\n";
-    std::cout << "Введите новое название (или оставьте пустым для сохранения текущего): ";
-    std::cin.ignore();
-    std::getline(std::cin, title);
-    if (!title.empty()) {
-        book->setTitle(title);
+    switch (choice) {
+    case 1: {
+        std::string newTitle;
+        std::cout << "Новое название: ";
+        std::cin.ignore();
+        std::getline(std::cin, newTitle);
+        book->setTitle(newTitle);
+        break;
+    }
+    case 2: { // изменить автора
+        std::cout << "1. Выбрать существующего автора\n";
+        std::cout << "2. Создать нового автора\n";
+        int sub; std::cin >> sub;
+        if (sub == 1) {
+            for (auto& a : authorsRepo.getAll()) {
+                std::cout << *a << "\n";
+            }
+            std::string authorId;
+            std::cout << "Введите ID нового автора: ";
+            std::cin >> authorId;
+            auto newAuthor = authorsRepo.get(authorId);
+            if (newAuthor) {
+                book->setAuthor(newAuthor);
+                newAuthor->addBook(book->getId());
+                std::cout << "Автор изменён.\n";
+            }
+            else {
+                std::cout << "Автор не найден.\n";
+            }
+        }
+        else if (sub == 2) {
+            FIO fio;
+            std::cout << "Введите ФИО нового автора: ";
+            std::cin >> fio;
+            std::string bio;
+            std::cout << "Введите биографию: ";
+            std::cin.ignore();
+            std::getline(std::cin, bio);
+            auto newAuthor = std::make_shared<Author>(fio, bio);
+            authorsRepo.add(newAuthor);
+            book->setAuthor(newAuthor);
+            newAuthor->addBook(book->getId());
+            std::cout << "Новый автор создан и назначен.\n";
+        }
+        break;
     }
 
-    std::cout << "Текущий ISBN: " << book->getIsbn() << "\n";
-    std::cout << "Введите новый ISBN (или оставьте пустым): ";
-    std::getline(std::cin, isbn);
-    if (!isbn.empty()) {
-        book->setIsbn(isbn);
-    }
-
-    std::cout << "Текущий год: " << book->getYear() << "\n";
-    std::cout << "Введите новый год (или -1 для сохранения текущего): ";
-    std::cin >> year;
-    if (year != -1) {
-        book->setYear(year);
-    }
-
-    std::cout << "Текущее количество: " << book->getQuantity() << "\n";
-    std::cout << "Введите новое количество (или -1 для сохранения текущего): ";
-    std::cin >> quantity;
-    if (quantity != -1) {
-        book->setQuantity(quantity);
-    }
-
-    std::cout << "Текущий жанр: " << book->getGenre() << "\n";
-    std::cout << "Введите новый жанр (или оставьте пустым): ";
-    std::cin.ignore();
-    std::getline(std::cin, genre);
-    if (!genre.empty()) {
-        book->setGenre(genre);
+    case 3: { std::string newIsbn; std::cin >> newIsbn; book->setIsbn(newIsbn); break; }
+    case 4: { int newYear; std::cin >> newYear; book->setYear(newYear); break; }
+    case 5: { int newQty; std::cin >> newQty; book->setQuantity(newQty); break; }
+    case 6: { std::string newGenre; std::cin >> newGenre; book->setGenre(newGenre); break; }
     }
 
     booksRepo.saveToBinaryFile("books.bin");
-
-    addToActionHistory("Отредактирована книга: " + book->getTitle());
-    std::cout << "Книга успешно отредактирована!\n";
+    std::cout << "Книга обновлена.\n";
 }
+
 
 void LibrarySystem::deleteBook() {
     std::string bookId;
@@ -691,64 +712,206 @@ void LibrarySystem::handleUserChoice(int choice) {
 
     std::string role = currentUser->getRole();
 
+    // === ЧИТАТЕЛЬ ===
     if (role == "Reader") {
         switch (choice) {
-        case 1:
-            showAllBooks();
-            break;
-        case 2:
-            searchBooks();
-            break;
-        case 3:
-            if (auto reader = std::dynamic_pointer_cast<Reader>(currentUser)) {
-                reader->showBorrowedBooks();
+        case 1: { // Просмотр книг
+            std::cout << "=== Просмотр книг ===\n";
+            std::cout << "1. Все книги\n";
+            std::cout << "2. Поиск книг\n";
+            std::cout << "3. Фильтрация книг\n";
+            std::cout << "4. Просмотр авторов\n";
+            std::cout << "5. Поиск авторов\n";
+            std::cout << "6. Просмотр книг по автору\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: showAllBooks(); break;
+            case 2: searchBooks(); break;
+            case 3: filterBooks(); break;
+            case 4: showAllAuthors(); break;
+            case 5: searchAuthors(); break;
+            case 6: showBooksByAuthor(); break;
+            case 0: break;
             }
             break;
-        case 4:
-            std::cout << "Функция изменения профиля\n";
-            break;
-        case 5:
-            logout();
-            break;
-        default:
-            std::cout << "Неверный выбор!\n";
         }
-    }
-    else if (role == "Librarian") {
-        switch (choice) {
-        case 1: addBook(); break;
-        case 2: editBook(); break;
-        case 3: deleteBook(); break;
-        case 4: issueBook(); break;   
-        case 5: acceptBook(); break;  
-        case 6: 
-            std::cout << "Список читателей:\n";
-            for (const auto& pair : usersMap) {
-                if (pair.second->getRole() == "Reader") {
-                    std::cout << *(pair.second) << std::endl;
-                }
-            }
+        case 2: { // Мои книги
+            std::dynamic_pointer_cast<Reader>(currentUser)->showBorrowedBooks();
             break;
-        case 7: ageBasedRecommendations(); break;
-        case 8: registerReader(); break;
-        case 9: logout(); break;
+        }
+        case 3: logout(); break;
         default: std::cout << "Неверный выбор!\n";
         }
     }
+
+    // === БИБЛИОТЕКАРЬ ===
+    else if (role == "Librarian") {
+        switch (choice) {
+        case 1: { // Работа с книгами
+            std::cout << "=== Работа с книгами ===\n";
+            std::cout << "1. Все книги\n";
+            std::cout << "2. Поиск книг\n";
+            std::cout << "3. Фильтрация книг\n";
+            std::cout << "4. Просмотр авторов\n";
+            std::cout << "5. Поиск авторов\n";
+            std::cout << "6. Просмотр книг по автору\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: showAllBooks(); break;
+            case 2: searchBooks(); break;
+            case 3: filterBooks(); break;
+            case 4: showAllAuthors(); break;
+            case 5: searchAuthors(); break;
+            case 6: showBooksByAuthor(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 2: { // Редактирование книг
+            std::cout << "=== Редактирование книг ===\n";
+            std::cout << "1. Добавить книгу\n";
+            std::cout << "2. Редактировать книгу\n";
+            std::cout << "3. Удалить книгу\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: addBook(); break;
+            case 2: editBook(); break;
+            case 3: deleteBook(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 3: { // Работа с читателями
+            std::cout << "=== Работа с читателями ===\n";
+            std::cout << "1. Просмотреть всех читателей\n";
+            std::cout << "2. Просмотреть книги конкретного читателя\n";
+            std::cout << "3. Зарегистрировать нового читателя\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: {
+                for (const auto& pair : usersMap) {
+                    if (pair.second->getRole() == "Reader")
+                        std::cout << *pair.second << "\n";
+                }
+                break;
+            }
+            case 2: {
+                std::string rid;
+                std::cout << "Введите ID читателя: ";
+                std::cin >> rid;
+                showReaderBorrowedBooks(rid);
+                break;
+            }
+            case 3: registerReader(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 4: { // Выдача/приём книг
+            std::cout << "=== Выдача/приём книг ===\n";
+            std::cout << "1. Выдать книгу\n";
+            std::cout << "2. Принять книгу\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: issueBook(); break;
+            case 2: acceptBook(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 5: logout(); break;
+        default: std::cout << "Неверный выбор!\n";
+        }
+    }
+
+    // === ДИРЕКТОР ===
     else if (role == "Director") {
         switch (choice) {
-        case 1: addBook(); break;
-        case 2: editBook(); break;
-        case 3: deleteBook(); break;
-        case 4: generateReport(); break;
-        case 5: registerUser(); break;
-        case 6: showStatistics(); break;
-        case 7: showActionHistory(); break;
-        case 8: logout(); break;
+        case 1: { // Просмотр книг
+            std::cout << "=== Просмотр книг ===\n";
+            std::cout << "1. Все книги\n";
+            std::cout << "2. Поиск книг\n";
+            std::cout << "3. Фильтрация книг\n";
+            std::cout << "4. Просмотр авторов\n";
+            std::cout << "5. Поиск авторов\n";
+            std::cout << "6. Просмотр книг по автору\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: showAllBooks(); break;
+            case 2: searchBooks(); break;
+            case 3: filterBooks(); break;
+            case 4: showAllAuthors(); break;
+            case 5: searchAuthors(); break;
+            case 6: showBooksByAuthor(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 2: { // Редактирование книг
+            std::cout << "=== Редактирование книг ===\n";
+            std::cout << "1. Добавить книгу\n";
+            std::cout << "2. Редактировать книгу\n";
+            std::cout << "3. Удалить книгу\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: addBook(); break;
+            case 2: editBook(); break;
+            case 3: deleteBook(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 3: { // Работа с пользователями
+            std::cout << "=== Работа с пользователями ===\n";
+            std::cout << "1. Просмотреть всех пользователей\n";
+            std::cout << "2. Зарегистрировать библиотекаря\n";
+            std::cout << "3. Зарегистрировать директора\n";
+            std::cout << "4. Удалить пользователя\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: for (auto& p : usersMap) std::cout << *p.second << "\n"; break;
+            case 2: registerLibrarian(); break;
+            case 3: registerDirector(); break;
+            case 4: {
+                std::string uid;
+                std::cout << "Введите ID пользователя: ";
+                std::cin >> uid;
+                deleteUser(uid);
+                break;
+            }
+            case 0: break;
+            }
+            break;
+        }
+        case 4: { // Выдача/приём книг
+            std::cout << "=== Выдача/приём книг ===\n";
+            std::cout << "1. Выдать книгу\n";
+            std::cout << "2. Принять книгу\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: issueBook(); break;
+            case 2: acceptBook(); break;
+            case 0: break;
+            }
+            break;
+        }
+        case 5: showStatistics(); break;
+        case 6: showActionHistory(); break;
+        case 7: logout(); break;
         default: std::cout << "Неверный выбор!\n";
         }
     }
 }
+
 
 void LibrarySystem::run() {
     std::cout << "=== Запуск библиотечной системы ===\n";
@@ -920,5 +1083,86 @@ void LibrarySystem::filterBooks() {
     else {
         std::cout << "Результаты:\n";
         for (auto& b : filtered) std::cout << *b << "\n";
+    }
+}
+
+void LibrarySystem::showReaderBorrowedBooks(const std::string& readerId) {
+    auto person = findUserById(readerId);
+    auto reader = std::dynamic_pointer_cast<Reader>(person);
+    if (!reader) {
+        std::cout << "Пользователь не найден или не является читателем.\n";
+        return;
+    }
+    reader->showBorrowedBooks();
+}
+
+void LibrarySystem::deleteUser(const std::string& userId) {
+    auto person = findUserById(userId);
+    if (!person) {
+        std::cout << "Пользователь не найден.\n";
+        return;
+    }
+
+    auto reader = std::dynamic_pointer_cast<Reader>(person);
+    if (reader) {
+        for (const auto& b : reader->getBorrowedBooks()) {
+            if (!b.isReturned()) {
+                std::cout << "Ошибка: читатель не вернул книги. Удаление запрещено.\n";
+                return;
+            }
+        }
+    }
+
+    usersMap.erase(userId);
+    PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
+    std::cout << "Пользователь удалён.\n";
+}
+
+void LibrarySystem::showAllAuthors() const {
+    std::cout << "=== Авторы ===\n";
+    for (auto& a : authorsRepo.getAll()) {
+        std::cout << *a << "\n";
+    }
+}
+
+void LibrarySystem::searchAuthors() {
+    std::cout << "Введите фамилию или имя автора: ";
+    std::string query;
+    std::cin.ignore();
+    std::getline(std::cin, query);
+
+    auto results = authorsRepo.findIf([&](const std::shared_ptr<Author>& a) {
+        return a->getFIO().getFullName().find(query) != std::string::npos;
+        });
+
+    if (results.empty()) {
+        std::cout << "Авторы не найдены.\n";
+    }
+    else {
+        for (auto& a : results) std::cout << *a << "\n";
+    }
+}
+
+void LibrarySystem::showBooksByAuthor() {
+    std::cout << "Введите фамилию или имя автора: ";
+    std::string query;
+    std::cin.ignore();
+    std::getline(std::cin, query);
+
+    auto results = authorsRepo.findIf([&](const std::shared_ptr<Author>& a) {
+        return a->getFIO().getFullName().find(query) != std::string::npos;
+        });
+
+    if (results.empty()) {
+        std::cout << "Автор не найден.\n";
+        return;
+    }
+
+    for (auto& author : results) {
+        std::cout << "Книги автора " << author->getFIO().getFullName() << ":\n";
+        for (const auto& bookId : author->getBookIds()) {
+            auto book = booksRepo.get(bookId);
+            if (book) std::cout << *book << "\n";
+        }
     }
 }

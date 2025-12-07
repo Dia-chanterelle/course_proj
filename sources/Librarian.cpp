@@ -10,18 +10,27 @@ Librarian::Librarian(const FIO& f, const std::string& log, const std::string& pw
 
 void Librarian::showMenu() {
     std::cout << "=== Меню библиотекаря ===\n";
-    std::cout << "ID: " << id << ", Сотрудник: " << fio.getFullName()
-        << ", возраст: " << age << ", отдел: " << department << "\n";
-    std::cout << "1. Добавить книгу\n";
-    std::cout << "2. Редактировать книгу\n";
-    std::cout << "3. Удалить книгу\n";
-    std::cout << "4. Выдать книгу\n";
-    std::cout << "5. Принять книгу\n";
-    std::cout << "6. Просмотреть всех читателей\n";
-    std::cout << "7. Статистика по возрастам читателей\n";
-    std::cout << "8. Зарегистрировать читателя\n";
-    std::cout << "9. Выход\n";
+    std::cout << "1. Работа с книгами\n";
+    std::cout << "   |-- Все книги\n";
+    std::cout << "   |-- Поиск книг\n";
+    std::cout << "   |-- Фильтрация книг\n";
+    std::cout << "   |-- Просмотр авторов\n";
+    std::cout << "   |-- Поиск авторов\n";
+    std::cout << "   |-- Просмотр книг по автору\n";
+    std::cout << "2. Редактирование книг\n";
+    std::cout << "   |-- Добавить книгу\n";
+    std::cout << "   |-- Редактировать книгу\n";
+    std::cout << "   |-- Удалить книгу\n";
+    std::cout << "3. Работа с читателями\n";
+    std::cout << "   |-- Просмотреть всех читателей\n";
+    std::cout << "   |-- Просмотреть книги конкретного читателя\n";
+    std::cout << "   |-- Зарегистрировать нового читателя\n";
+    std::cout << "4. Выдача/приём книг\n";
+    std::cout << "   |-- Выдать книгу\n";
+    std::cout << "   |-- Принять книгу\n";
+    std::cout << "5. Выход\n";
 }
+
 
 void Librarian::saveToBinaryFile(std::ofstream& file) const {
     Person::saveToBinaryFile(file);

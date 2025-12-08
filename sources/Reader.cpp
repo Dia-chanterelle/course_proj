@@ -4,9 +4,14 @@
 #include <algorithm>
 #include <cstring>
 
+//Reader::Reader(const FIO& f, const std::string& log, const std::string& pwd,
+//    int age, const std::string& readerId)
+//    : Person(f, log, pwd, age, readerId) {
+//}
+
 Reader::Reader(const FIO& f, const std::string& log, const std::string& pwd,
-    int age, const std::string& readerId)
-    : Person(f, log, pwd, age, readerId) {
+    int age, const std::string& readerId, bool isEncrypted)
+    : Person(f, log, pwd, age, readerId, isEncrypted) {
 }
 
 void Reader::showMenu() {
@@ -22,10 +27,8 @@ void Reader::showMenu() {
     std::cout << "3. Выход\n";
 }
 
-
-
-void Reader::borrowBook(const std::string& bookId) {
-    borrowedBooks.emplace_back(bookId, id, Date());
+void Reader::borrowBook(const std::string& bookId, const Date& borrowDate) {
+    borrowedBooks.emplace_back(bookId, id, borrowDate);
 }
 
 void Reader::returnBook(const std::string& bookId) {
@@ -117,6 +120,6 @@ std::map<std::string, std::shared_ptr<Reader>> Reader::loadAllFromBinaryFile(con
     return readersMap;
 }
 
-std::string Reader::generateId() const {
-    return "R" + std::to_string(person_count + 1);
-}
+//std::string Reader::generateId() const {
+//    return "R" + std::to_string(person_count + 1);
+//}

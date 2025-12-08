@@ -3,10 +3,18 @@
 #include <fstream>
 #include <cstring>
 
+//Librarian::Librarian(const FIO& f, const std::string& log, const std::string& pwd,
+//    int age, const std::string& librarianId, const std::string& dept)
+//    : Person(f, log, pwd, age, librarianId), department(dept) {
+//}
+
 Librarian::Librarian(const FIO& f, const std::string& log, const std::string& pwd,
-    int age, const std::string& librarianId, const std::string& dept)
-    : Person(f, log, pwd, age, librarianId), department(dept) {
+    int age, const std::string& librarianId,
+    const std::string& dept, bool isEncrypted)
+    : Person(f, log, pwd, age, librarianId, isEncrypted), department(dept) {
 }
+
+
 
 void Librarian::showMenu() {
     std::cout << "=== Меню библиотекаря ===\n";
@@ -85,6 +93,6 @@ std::map<std::string, std::shared_ptr<Librarian>> Librarian::loadAllFromBinaryFi
     return librariansMap;
 }
 
-std::string Librarian::generateId() const {
-    return "L" + std::to_string(person_count + 1);
-}
+//std::string Librarian::generateId() const {
+//    return "L" + std::to_string(person_count + 1);
+//}

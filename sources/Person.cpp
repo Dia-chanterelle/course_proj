@@ -6,36 +6,21 @@
 
 int Person::person_count = 0;
 
-Person::Person(const FIO& f, const std::string& log, const std::string& pwd,
-    int age, const std::string& personId)
-    : fio(f), login(log), age(age) {
-    encryptedPassword = SimpleCrypto::simpleEncrypt(pwd);
+//Person::Person(const FIO& f, const std::string& log, const std::string& pwd,
+//    int age, const std::string& personId)
+//    : fio(f), login(log), age(age), id(personId) {
+//    encryptedPassword = SimpleCrypto::simpleEncrypt(pwd);
+//}
 
-    if (personId.empty()) {
-        id = generateId();
-        person_count++;
-    }
-    else {
-        id = personId;
-        try {
-            std::string numStr;
-            for (size_t i = 1; i < personId.length(); i++) {
-                if (isdigit(personId[i])) {
-                    numStr += personId[i];
-                }
-            }
-            if (!numStr.empty()) {
-                int num = std::stoi(numStr);
-                if (num >= person_count) {
-                    person_count = num + 1;
-                }
-            }
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Ошибка: " << e.what() << std::endl;
-        }
-    }
+Person::Person(const FIO& f, const std::string& log, const std::string& pwd,
+    int age, const std::string& personId, bool isEncrypted)
+    : fio(f), login(log), age(age), id(personId) {
+    if (isEncrypted)
+        encryptedPassword = pwd; // уже зашифрованный пароль
+    else
+        encryptedPassword = SimpleCrypto::simpleEncrypt(pwd); // новый пароль
 }
+
 
 bool Person::authenticate(const std::string& pwd) const {
     return SimpleCrypto::compareEncrypted(pwd, encryptedPassword);
@@ -138,6 +123,6 @@ void Person::loadFromBinaryFile(std::ifstream& file) {
     file.read(role.data(), roleSize);
 }
 
-std::string Person::generateId() const {
-    return "P" + std::to_string(person_count + 1);
-}
+//std::string Person::generateId() const {
+//    return "P" + std::to_string(person_count + 1);
+//}

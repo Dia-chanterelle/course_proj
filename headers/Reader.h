@@ -9,16 +9,20 @@ private:
     std::vector<BorrowedBook> borrowedBooks;
 
 public:
-    Reader(const FIO& f = FIO(), const std::string& log = "",
+    /*Reader(const FIO& f = FIO(), const std::string& log = "",
         const std::string& pwd = "", int age = 0,
-        const std::string& readerId = "");
+        const std::string& readerId = "", bool isEncrypted = false);*/
+
+    Reader() : Person(FIO(), "", "", 0, "", true) {}
+
+    Reader(const FIO& f, const std::string& log, const std::string& pwd,
+        int age, const std::string& readerId, bool isEncrypted = false);
 
     void showMenu() override;
     std::string getRole() const override { return "Reader"; }
     const std::vector<BorrowedBook>& getBorrowedBooks() const { return borrowedBooks; }
 
-
-    void borrowBook(const std::string& bookId);
+    void borrowBook(const std::string& bookId, const Date& borrowDate);
     void returnBook(const std::string& bookId);
     void showBorrowedBooks() const;
 
@@ -30,5 +34,5 @@ public:
     static std::map<std::string, std::shared_ptr<Reader>> loadAllFromBinaryFile(const std::string& filename);
 
 protected:
-    std::string generateId() const override;
+    //std::string generateId() const override;
 };

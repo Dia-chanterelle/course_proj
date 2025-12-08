@@ -3,10 +3,16 @@
 #include <fstream>
 #include <cstring>
 
+//Director::Director(const FIO& f, const std::string& log, const std::string& pwd,
+//    int age, const std::string& directorId)
+//    : Librarian(f, log, pwd, age, directorId, "Administration") {
+//}
+
 Director::Director(const FIO& f, const std::string& log, const std::string& pwd,
-    int age, const std::string& directorId)
-    : Librarian(f, log, pwd, age, directorId, "Administration") {
+    int age, const std::string& directorId, bool isEncrypted)
+    : Librarian(f, log, pwd, age, directorId, "Administration", isEncrypted) {
 }
+
 
 void Director::showMenu() {
     std::cout << "=== Меню директора ===\n";
@@ -30,11 +36,11 @@ void Director::showMenu() {
     std::cout << "   |-- Выдать книгу\n";
     std::cout << "   |-- Принять книгу\n";
     std::cout << "5. Статистика и отчёты\n";
+    std::cout << "   |-- Показать статистику\n";
+    std::cout << "   |-- Сформировать текстовый отчёт\n";
     std::cout << "6. История действий\n";
     std::cout << "7. Выход\n";
 }
-
-
 
 void Director::saveAllToBinaryFile(const std::map<std::string, std::shared_ptr<Director>>& directorsMap,
     const std::string& filename) {
@@ -69,6 +75,6 @@ std::map<std::string, std::shared_ptr<Director>> Director::loadAllFromBinaryFile
     return directorsMap;
 }
 
-std::string Director::generateId() const {
-    return "D" + std::to_string(person_count + 1);
-}
+//std::string Director::generateId() const {
+//    return "D" + std::to_string(person_count + 1);
+//}

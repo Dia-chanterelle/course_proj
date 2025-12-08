@@ -1,17 +1,36 @@
 #pragma once
-#include "Person.h"
+#include <memory>
+#include <map>
+#include <string>
 #include "Reader.h"
 #include "Librarian.h"
 #include "Director.h"
-#include <map>
-#include <memory>
 
 class PersonFactory {
+private:
+    static int readerCount;
+    static int librarianCount;
+    static int directorCount;
+
 public:
-    static std::shared_ptr<Person> createPersonFromBinaryFile(std::ifstream& file);
+    static std::shared_ptr<Reader> createReader(const FIO& f,
+        const std::string& log,
+        const std::string& pwd,
+        int age);
+
+    static std::shared_ptr<Librarian> createLibrarian(const FIO& f,
+        const std::string& log,
+        const std::string& pwd,
+        int age,
+        const std::string& dept);
+
+    static std::shared_ptr<Director> createDirector(const FIO& f,
+        const std::string& log,
+        const std::string& pwd,
+        int age);
+
+    static void saveAllToBinaryFile(const std::map<std::string, std::shared_ptr<Person>>& users,
+        const std::string& filename);
 
     static std::map<std::string, std::shared_ptr<Person>> loadAllFromBinaryFile(const std::string& filename);
-
-    static void saveAllToBinaryFile(const std::map<std::string, std::shared_ptr<Person>>& personsMap,
-        const std::string& filename);
 };

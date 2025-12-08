@@ -1,34 +1,51 @@
 #include "../headers/Date.h"
-#include <stdexcept>
+#include <chrono>
+#include <ctime>
 
-Date::Date() : day(1), month(1), year(2000) {}
+std::istream& operator>>(std::istream& in, Date& date) {
+    char dot;
+    in >> date.day >> dot >> date.month >> dot >> date.year;
+    return in;
+}
 
-Date::Date(int d, int m, int y) : day(d), month(m), year(y) {
-    if (!isValid(d, m, y)) throw std::invalid_argument("Invalid date");
+std::ostream& operator<<(std::ostream& out, const Date& date) {
+    out << (date.day < 10 ? "0" : "") << date.day << "."
+        << (date.month < 10 ? "0" : "") << date.month << "."
+        << date.year;
+    return out;
+}
+
+bool Date::operator==(const Date& other) const {
+    return day == other.day && month == other.month && year == other.year;
 }
 
 bool Date::isValid(int d, int m, int y) {
-    if (y < 1900 || y > 2100) return false;
-    if (m < 1 || m > 12) return false;
-    if (d < 1) return false;
-
-    int daysInMonth[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
-    if (m == 2 && (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))) {
-        return d <= 29;
-    }
-    return d <= daysInMonth[m - 1];
+    if (y < 1 || m < 1 || m > 12 || d < 1) return false;
+    static int daysInMonth[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+    int maxDay = daysInMonth[m - 1];
+    if (m == 2 && ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))) maxDay = 29;
+    return d <= maxDay;
 }
 
-std::ostream& operator<<(std::ostream& os, const Date& dt) {
-    os << dt.day << '.' << dt.month << '.' << dt.year;
-    return os;
+Date Date::today() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    std::tm tm{};
+    localtime_s(&tm, &t);
+    return Date(tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
 }
 
-std::istream& operator>>(std::istream& is, Date& dt) {
-    char dot;
-    is >> dt.day >> dot >> dt.month >> dot >> dt.year;
-    if (!Date::isValid(dt.day, dt.month, dt.year)) {
-        is.setstate(std::ios::failbit);
-    }
-    return is;
+Date Date::addDays(int days) const {
+    std::tm tm{};
+    tm.tm_mday = day;
+    tm.tm_mon = month - 1;
+    tm.tm_year = year - 1900;
+
+    std::time_t t = std::mktime(&tm);
+    t += days * 24 * 60 * 60;
+
+    std::tm newTm{};
+    localtime_s(&newTm, &t);
+
+    return Date(newTm.tm_mday, newTm.tm_mon + 1, newTm.tm_year + 1900);
 }

@@ -2,8 +2,33 @@
 #include <fstream>
 #include <cstring>
 
-BorrowedBook::BorrowedBook(const std::string& bId, const std::string& rId, const Date& bd)
-    : bookId(bId), readerId(rId), borrowDate(bd), returnDate(Date()), returned(false) {
+BorrowedBook::BorrowedBook(const std::string& bId,
+    const std::string& rId,
+    const Date& bd)
+    : bookId(bId), readerId(rId), borrowDate(bd), returned(false)
+{
+    // срок возврата = дата выдачи + 14 дней
+    returnDate = bd.addDays(14);
+}
+
+void BorrowedBook::markReturned() {
+    returned = true;
+}
+
+
+void BorrowedBook::returnBook(bool manual) {
+    returned = true;
+    if (manual) {
+        std::cout << "Введите дату возврата (дд.мм.гггг): ";
+        std::cin >> returnDate;
+        if (!Date::isValid(returnDate.getDay(), returnDate.getMonth(), returnDate.getYear())) {
+            std::cout << "Ошибка: некорректная дата.\n";
+            returned = false;
+        }
+    }
+    else {
+        returnDate = Date::today();
+    }
 }
 
 void BorrowedBook::saveToBinaryFile(std::ofstream& file) const {

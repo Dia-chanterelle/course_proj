@@ -17,8 +17,12 @@ protected:
     static int person_count;
 
 public:
-    Person(const FIO& f = FIO(), const std::string& log = "",
-        const std::string& pwd = "", int age = 0, const std::string& personId = "");
+    /*Person(const FIO& f = FIO(), const std::string& log = "",
+        const std::string& pwd = "", int age = 0, const std::string& personId = ""á bool isEncrypted = false);*/
+
+    Person(const FIO& f, const std::string& log, const std::string& pwd,
+        int age, const std::string& personId, bool isEncrypted = false);
+
     virtual ~Person() = default;
 
     virtual void showMenu() = 0;
@@ -31,6 +35,7 @@ public:
     std::string getLogin() const { return login; }
     int getAge() const { return age; }
     std::string getId() const { return id; }
+    const std::string& getEncryptedPassword() const { return encryptedPassword; }
 
     static int getPersonCount() { return person_count; }
     static void incrementPersonCount() { person_count++; }
@@ -42,5 +47,5 @@ public:
     virtual void saveToBinaryFile(std::ofstream& file) const;
     virtual void loadFromBinaryFile(std::ifstream& file);
 
-    virtual std::string generateId() const;
+    //virtual std::string generateId() const=0;
 };

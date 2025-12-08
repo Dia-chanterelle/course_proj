@@ -8,12 +8,19 @@ private:
     std::string department;
 
 public:
-    Librarian(const FIO& f = FIO(), const std::string& log = "",
+    /*Librarian(const FIO& f = FIO(), const std::string& log = "",
         const std::string& pwd = "", int age = 0,
-        const std::string& librarianId = "", const std::string& dept = "Main");
+        const std::string& librarianId = "", const std::string& dept = "Main");*/
+
+    Librarian() : Person(FIO(), "", "", 0, "", true), department("Main") {}
+
+    Librarian(const FIO& f, const std::string& log, const std::string& pwd,
+        int age, const std::string& librarianId,
+        const std::string& dept, bool isEncrypted = false);
 
     void showMenu() override;
     std::string getRole() const override { return "Librarian"; }
+    const std::string& getDepartment() const { return department; }
 
     void saveToBinaryFile(std::ofstream& file) const override;
     void loadFromBinaryFile(std::ifstream& file) override;
@@ -23,5 +30,5 @@ public:
     static std::map<std::string, std::shared_ptr<Librarian>> loadAllFromBinaryFile(const std::string& filename);
 
 protected:
-    std::string generateId() const override;
+    //std::string generateId() const override;
 };

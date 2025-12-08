@@ -26,16 +26,13 @@ public:
     std::string getBiography() const { return biography; }
     std::vector<std::string> getBookIds() const { return bookIds; }
 
-    // Методы работы с книгами
     void addBook(const std::string& bookId);
     void removeBook(const std::string& bookId);
     bool hasBook(const std::string& bookId) const;
 
-
     static int getAuthorCount() { return author_count; }
     static void setAuthorCount(int count) { author_count = count; }
 
-    // Методы для работы с Repository
     void saveToBinaryFile(std::ofstream& file) const;
     void loadFromBinaryFile(std::ifstream& file);
 

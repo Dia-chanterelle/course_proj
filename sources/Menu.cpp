@@ -71,26 +71,27 @@ void LibrarySystem::saveAllData() {
 }
 
 void LibrarySystem::createTestUsers() {
-    auto librarian = std::make_shared<Librarian>(
-        FIO("Иванова", "Мария", "Петровна"),
-        "librarian",
-        "lib123",
-        35
-    );
-    usersMap[librarian->getId()] = librarian;
+    auto r1 = PersonFactory::createReader(FIO("Иванов", "Иван", "Иванович"), "ivanov", "12345", 25);
+    auto r2 = PersonFactory::createReader(FIO("Петров", "Пётр", "Петрович"), "petrov", "54321", 30);
 
-    auto director = std::make_shared<Director>(
-        FIO("Петров", "Алексей", "Сергеевич"),
-        "director",
-        "admin123",
-        45
-    );
-    usersMap[director->getId()] = director;
+    auto l1 = PersonFactory::createLibrarian(FIO("Сидоров", "Сидор", "Сидорович"), "sidorov", "libpass", 40, "Science");
+    auto d1 = PersonFactory::createDirector(FIO("Кузнецов", "Кузьма", "Кузьмич"), "kuznetsov", "dirpass", 50);
 
-    std::cout << "Созданы тестовые пользователи:\n";
-    std::cout << "   - Библиотекарь: логин 'librarian', пароль 'lib123'\n";
-    std::cout << "   - Директор: логин 'director', пароль 'admin123'\n";
+    usersMap.emplace(r1->getId(), r1);
+    usersMap.emplace(r2->getId(), r2);
+    usersMap.emplace(l1->getId(), l1);
+    usersMap.emplace(d1->getId(), d1);
+
+
+    std::cout << "Создано тестовых пользователей: " << usersMap.size() << "\n";
+    
+    std::cout << "Тестовые пользователи:\n";
+    std::cout << "Reader1 -> Логин: " << r1->getLogin() << ", Пароль: 12345\n";
+    std::cout << "Reader2 -> Логин: " << r2->getLogin() << ", Пароль: 54321\n";
+    std::cout << "Librarian -> Логин: " << l1->getLogin() << ", Пароль: libpass\n";
+    std::cout << "Director -> Логин: " << d1->getLogin() << ", Пароль: dirpass\n";
 }
+
 
 void LibrarySystem::createTestBooks() {
     if (authorsRepo.empty()) {
@@ -104,9 +105,9 @@ void LibrarySystem::createTestBooks() {
     auto allAuthors = authorsRepo.getAll();
     if (!allAuthors.empty()) {
         auto author1 = allAuthors[0];
-
+        auto author2 = allAuthors[1];
         auto book1 = std::make_shared<Book>("Война и мир", author1, "978-5-389-00001-1", 1869, 5, "Роман");
-        auto book2 = std::make_shared<Book>("Преступление и наказание", author1, "978-5-389-00002-2", 1866, 3, "Роман");
+        auto book2 = std::make_shared<Book>("Преступление и наказание", author2, "978-5-389-00002-2", 1866, 3, "Роман");
 
         booksRepo.add(book1);
         booksRepo.add(book2);
@@ -169,7 +170,6 @@ bool LibrarySystem::login() {
             return true;
         }
     }
-
     std::cout << " Ошибка: неверный логин или пароль!\n";
     return false;
 }
@@ -196,8 +196,8 @@ void LibrarySystem::registerReader() {
         }
     }
 
-    auto newReader = std::make_shared<Reader>(fio, login, password, age);
-    usersMap[newReader->getId()] = newReader;
+    auto newReader = PersonFactory::createReader(fio, login, password, age);
+    usersMap.emplace(newReader->getId(), newReader);
 
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
@@ -230,8 +230,8 @@ void LibrarySystem::registerLibrarian() {
         }
     }
 
-    auto newLibrarian = std::make_shared<Librarian>(fio, login, password, age, "", department);
-    usersMap[newLibrarian->getId()] = newLibrarian;
+    auto newLibrarian = PersonFactory::createLibrarian(fio, login, password, age, department);
+    usersMap.emplace(newLibrarian->getId(), newLibrarian);
 
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
@@ -262,8 +262,8 @@ void LibrarySystem::registerDirector() {
         }
     }
 
-    auto newDirector = std::make_shared<Director>(fio, login, password, age);
-    usersMap[newDirector->getId()] = newDirector;
+    auto newDirector = PersonFactory::createDirector(fio, login, password, age);
+    usersMap.emplace(newDirector->getId(), newDirector);
 
     PersonFactory::saveAllToBinaryFile(usersMap, "users.bin");
 
@@ -306,40 +306,21 @@ void LibrarySystem::registerUser() {
 }
 
 void LibrarySystem::addToActionHistory(const std::string& action) {
-    actionHistory.push(action);
-    if (actionHistory.size() > 100) {
-        std::stack<std::string> temp;
-        while (!actionHistory.empty()) {
-            temp.push(actionHistory.top());
-            actionHistory.pop();
-        }
-        int count = 0;
-        while (!temp.empty() && count < 50) {
-            actionHistory.push(temp.top());
-            temp.pop();
-            count++;
-        }
-    }
+    actionHistory.push(action); 
 }
+
 
 void LibrarySystem::showActionHistory() {
-    std::cout << "=== История действий ===\n";
-    if (actionHistory.empty()) {
-        std::cout << "История пуста.\n";
-        return;
-    }
+    std::cout << "=== История действий (LIFO) ===\n";
 
-    auto temp = actionHistory;
-    std::vector<std::string> historyList;
+    std::stack<std::string> temp = actionHistory;
+
     while (!temp.empty()) {
-        historyList.push_back(temp.top());
-        temp.pop();
-    }
-
-    for (int i = historyList.size() - 1; i >= 0; --i) {
-        std::cout << "- " << historyList[i] << "\n";
+        std::cout << temp.top() << "\n"; 
+        temp.pop();                      
     }
 }
+
 
 void LibrarySystem::manageBooks() {
     int choice;
@@ -610,35 +591,47 @@ void LibrarySystem::sortBooks() {
 }
 
 void LibrarySystem::generateReport() {
-    std::ofstream report("library_report.txt");
+    std::ofstream report("report.txt");
     if (!report.is_open()) {
-        std::cout << "Ошибка создания отчета!\n";
+        std::cout << "Ошибка: не удалось создать файл отчёта.\n";
         return;
     }
 
-    report << "=== ОТЧЕТ БИБЛИОТЕКИ ===\n\n";
-    report << "Общая статистика:\n";
-    report << "Количество пользователей: " << usersMap.size() << "\n";
-    report << "Количество книг: " << booksRepo.size() << "\n";
-    report << "Количество авторов: " << authorsRepo.size() << "\n";
-    report << "Выданных книг: " << borrowedBooks.size() << "\n\n";
+    report << "=== Отчёт о библиотеке ===\n\n";
 
-    report << "Список книг:\n";
-    for (const auto& book : booksRepo.getAll()) {
-        report << *book << "\n";
+    report << "Книг в системе: " << booksRepo.size() << "\n";
+    report << "Авторов: " << authorsRepo.size() << "\n";
+    report << "Пользователей: " << usersMap.size() << "\n";
+    report << "Взятых книг: " << borrowedBooks.size() << "\n\n";
+
+    report << "--- Список книг ---\n";
+    for (auto& b : booksRepo.getAll()) {
+        report << *b << "\n";
     }
 
-    report << "\nСписок пользователей:\n";
-    for (const auto& pair : usersMap) {
-        report << "ID: " << pair.second->getId()
-            << ", Логин: " << pair.second->getLogin()
-            << ", Роль: " << pair.second->getRole() << "\n";
+    report << "\n--- Список авторов ---\n";
+    for (auto& a : authorsRepo.getAll()) {
+        report << *a << "\n";
+    }
+
+    report << "\n--- Список пользователей ---\n";
+    for (auto& p : usersMap) {
+        report << *p.second << "\n";
+    }
+
+    report << "\n--- Взятые книги ---\n";
+    for (auto& bb : borrowedBooks) {
+        report << "Книга: " << bb.getBookId()
+            << ", Читатель: " << bb.getReaderId()
+            << ", Дата выдачи: " << bb.getBorrowDate()
+            << (bb.isReturned() ? ", возвращена" : ", на руках")
+            << "\n";
     }
 
     report.close();
-    std::cout << "Отчет сохранен в файл 'library_report.txt'\n";
-    addToActionHistory("Сгенерирован отчет библиотеки");
+    std::cout << "Отчёт сформирован: report.txt\n";
 }
+
 
 void LibrarySystem::ageBasedRecommendations() {
     if (!currentUser) return;
@@ -904,7 +897,19 @@ void LibrarySystem::handleUserChoice(int choice) {
             }
             break;
         }
-        case 5: showStatistics(); break;
+        case 5: {
+            std::cout << "=== Статистика и отчёты ===\n";
+            std::cout << "1. Показать статистику\n";
+            std::cout << "2. Сформировать текстовый отчёт\n";
+            std::cout << "0. Выход\n";
+            int sub; std::cin >> sub;
+            switch (sub) {
+            case 1: showStatistics(); break;
+            case 2: generateReport(); break;
+            case 0: break;
+            }
+            break;
+        }
         case 6: showActionHistory(); break;
         case 7: logout(); break;
         default: std::cout << "Неверный выбор!\n";
@@ -947,8 +952,7 @@ void LibrarySystem::issueBook() {
 
     std::cout << "Введите ID читателя: ";
     std::cin >> readerId;
-    auto person = findUserById(readerId);
-    auto reader = std::dynamic_pointer_cast<Reader>(person);
+    auto reader = std::dynamic_pointer_cast<Reader>(findUserById(readerId));
     if (!reader) {
         std::cout << "Пользователь не найден или не является читателем.\n";
         return;
@@ -966,11 +970,28 @@ void LibrarySystem::issueBook() {
         return;
     }
 
+    // выбор даты выдачи
+    std::cout << "Вы хотите ввести дату вручную? (1 - да, 0 - нет): ";
+    int choice; std::cin >> choice;
+    Date borrowDate;
+    if (choice == 1) {
+        std::cout << "Введите дату (дд.мм.гггг): ";
+        std::cin >> borrowDate;
+        if (!Date::isValid(borrowDate.getDay(), borrowDate.getMonth(), borrowDate.getYear())) {
+            std::cout << "Ошибка: некорректная дата.\n";
+            return;
+        }
+    }
+    else {
+        borrowDate = Date::today();
+    }
+
     book->setQuantity(book->getQuantity() - 1);
 
-    reader->borrowBook(bookId);
+    reader->borrowBook(bookId, borrowDate);
 
-    BorrowedBook bb(bookId, readerId, Date()); // текущая дата (по умолчанию 1.1.2000)
+    // создаём запись о выдаче (срок возврата = borrowDate + 14 дней)
+    BorrowedBook bb(bookId, readerId, borrowDate);
     borrowedBooks.push_back(bb);
 
     booksRepo.saveToBinaryFile("books.bin");
@@ -985,17 +1006,17 @@ void LibrarySystem::issueBook() {
     BorrowedBook::saveAllToBinaryFile(borrowedBooksMap, "borrowed.bin");
 
     addToActionHistory("Выдана книга: " + bookId + " читателю " + readerId);
-    std::cout << "Книга выдана.\n";
+    std::cout << "Книга выдана. Срок возврата: " << bb.getReturnDate() << "\n";
 }
 
+
 void LibrarySystem::acceptBook() {
-    std::cout << "=== Прием книги ===\n";
+    std::cout << "=== Приём книги ===\n";
     std::string readerId, bookId;
 
     std::cout << "Введите ID читателя: ";
     std::cin >> readerId;
-    auto person = findUserById(readerId);
-    auto reader = std::dynamic_pointer_cast<Reader>(person);
+    auto reader = std::dynamic_pointer_cast<Reader>(findUserById(readerId));
     if (!reader) {
         std::cout << "Пользователь не найден или не является читателем.\n";
         return;
@@ -1009,17 +1030,37 @@ void LibrarySystem::acceptBook() {
         return;
     }
 
-    reader->returnBook(bookId);
-
-    book->setQuantity(book->getQuantity() + 1);
-
     bool found = false;
     for (auto& b : borrowedBooks) {
         if (b.getBookId() == bookId && b.getReaderId() == readerId && !b.isReturned()) {
-            b.returnBook(); 
+            b.markReturned();
+
+            Date today = Date::today();
+            Date deadline = b.getReturnDate();
+
+            // проверка просрочки
+            if (today.getYear() > deadline.getYear() ||
+                (today.getYear() == deadline.getYear() &&
+                    (today.getMonth() > deadline.getMonth() ||
+                        (today.getMonth() == deadline.getMonth() &&
+                            today.getDay() > deadline.getDay())))) {
+                std::cout << "Книга возвращена с просрочкой! Срок был до: " << deadline << "\n";
+            }
+            else {
+                std::cout << "Книга возвращена вовремя. Срок был до: " << deadline << "\n";
+            }
+
             found = true;
             break;
         }
+    }
+
+    if (found) {
+        book->setQuantity(book->getQuantity() + 1);
+        reader->returnBook(bookId);
+    }
+    else {
+        std::cout << "Запись о выдаче не найдена.\n";
     }
 
     booksRepo.saveToBinaryFile("books.bin");
@@ -1034,8 +1075,9 @@ void LibrarySystem::acceptBook() {
     BorrowedBook::saveAllToBinaryFile(borrowedBooksMap, "borrowed.bin");
 
     addToActionHistory("Принята книга: " + bookId + " от читателя " + readerId);
-    std::cout << (found ? "Книга принята.\n" : "Запись о выдаче не найдена, инвентарь обновлен.\n");
 }
+
+
 
 void LibrarySystem::filterBooks() {
     std::cout << "=== Фильтрация книг ===\n";

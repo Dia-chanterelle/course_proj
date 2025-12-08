@@ -4,12 +4,13 @@
 #include <vector>
 #include <map>
 
+
 class BorrowedBook {
 private:
     std::string bookId;
     std::string readerId;
     Date borrowDate;
-    Date returnDate;
+    Date returnDate;// срок возврата (borrowDate + 14 дней)
     bool returned;
 
 public:
@@ -20,14 +21,16 @@ public:
     std::string getReaderId() const { return readerId; }
     Date getBorrowDate() const { return borrowDate; }
     Date getReturnDate() const { return returnDate; }
+
+    void markReturned();
     bool isReturned() const { return returned; }
 
-    void returnBook() { returned = true; returnDate = Date(1, 1, 2000); }
+    void returnBook(bool);
 
     void saveToBinaryFile(std::ofstream& file) const;
     void loadFromBinaryFile(std::ifstream& file);
 
-    // Статические методы для работы с map (ключ - bookId + readerId)
+
     static void saveAllToBinaryFile(
         const std::map<std::string, BorrowedBook>& borrowedBooksMap,
         const std::string& filename);
